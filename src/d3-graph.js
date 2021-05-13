@@ -1,6 +1,10 @@
 import * as d3 from 'd3';
 import _ from 'lodash/fp';
 
+const width = 600;
+const height = 500;
+const initialViewBox = [-width/2, -height/2, width, height];
+
 const drag = simulation => {
   
   function dragstarted(event, d) {
@@ -27,9 +31,16 @@ const drag = simulation => {
 }
 
 export const createSvg = (domNode) => {
-    return d3.select(domNode)
+    const svg = d3.select(domNode)
 	.append('svg')
-	.attr('viewBox', [-250, -250, 500, 500]);
+	.attr('viewBox', initialViewBox)
+	.call(d3.zoom().on('zoom', (e)=>{
+	    const {x, y, k} = e.transform;
+	    const [px, py, pw, ph] = _.map(parseInt, svg.attr('viewBox').split(','));
+	    svg.attr('viewBox', [px-x*0.5, py-y*0.5, pw, ph]);
+	}));
+
+    return svg;
 };
 
 
@@ -62,7 +73,7 @@ const drawGraph = (svg, graphData, configuration, env)=>{
     const {modules, requires} = graphData;
 
     const totalComplexity = ({details})=>details.moduleComplexity+_.sumBy('complexity', details.mccabe)
-    const nodes = modules.map(({moduleName})=>({
+    let nodes = modules.map(({moduleName})=>({
 	id: moduleName,
 	details: getModuleDetails(moduleName, completeGraph, dataConfiguration)
     })).map(m=>({
@@ -84,6 +95,7 @@ const drawGraph = (svg, graphData, configuration, env)=>{
 	}
 	return minRad+(complexity-minC)*(maxRad-minRad)/(maxC-minC);
     };
+    nodes = nodes.map(n=>({...n, radius: r(n.complexity)}));
 
     const links = requires.map(([source, target])=>({source, target}))
     const simulation = d3.forceSimulation(nodes)
@@ -91,6 +103,8 @@ const drawGraph = (svg, graphData, configuration, env)=>{
 	.force("charge", d3.forceManyBody().strength(-300))
 	.force("x", d3.forceX())
 	.force("y", d3.forceY());
+
+    svg.attr('viewBox', initialViewBox);
 
     svg.append("defs").selectAll("marker")
 	.data(["triangle"])
@@ -125,7 +139,7 @@ const drawGraph = (svg, graphData, configuration, env)=>{
 	.attr('stroke', 'white')
 	.attr('stroke-width', 1.5)
 	.attr("fill", "#f4a254")
-	.attr('r', ({complexity})=>r(complexity));
+	.attr('r', ({radius})=>radius);
 
     if(showNames){
 	node.append('text')
@@ -151,11 +165,18 @@ const drawGraph = (svg, graphData, configuration, env)=>{
 	onNodeClick && onNodeClick(...args);
     })
 
+    const unitV = ({source, target})=>(((dx, dy)=>{
+	const norm = Math.sqrt(dx*dx+dy*dy);
+	return [dx/norm, dy/norm];
+    })(target.x-source.x, target.y-source.y));
+
+    const withUnit = fn=>d=>fn(d, unitV(d));
+
     simulation.on("tick", () => {
-	link.attr("x1", d => d.source.x)
-	    .attr("y1", d => d.source.y)
-	    .attr("x2", d => d.target.x)
-	    .attr("y2", d => d.target.y);
+	link.attr("x1", withUnit((d, unitV) => d.source.x+unitV[0]*d.source.radius*.7))
+	    .attr("y1", withUnit((d, unitV) => d.source.y+unitV[1]*d.source.radius*.7))
+	    .attr("x2", withUnit((d, unitV) => d.target.x-unitV[0]*d.target.radius*.7))
+	    .attr("y2", withUnit((d, unitV) => d.target.y-unitV[1]*d.target.radius*.7));
 
 	node.attr('transform', d=>`translate(${d.x}, ${d.y})`);
     });

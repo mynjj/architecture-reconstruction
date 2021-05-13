@@ -31,7 +31,7 @@ const getGraphData = (completeGraph, {externalDependencies, packagesDepth})=>{
     const modulesObj = _.keyBy('moduleName', modules);
 
     const validRequires = ([p1, p2])=>
-	  !!modulesObj[p1] && !!modulesObj[p2];
+	  !!modulesObj[p1] && !!modulesObj[p2] && p1!==p2;
     const onlyValidRequires = _.filter(validRequires);
     const mergeByCap = _.map(_.map(cappedModuleName));
     const requiresPipeline = [

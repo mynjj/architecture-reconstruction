@@ -37,7 +37,7 @@ module.exports = {
     },
     plugins: [
 	new HtmlWebpackPlugin({
-	    title: 'SOARC reconstruction',
+	    title: 'View reconstruction - Scrapy',
 	    template: './src/index.html',
 	})
     ],

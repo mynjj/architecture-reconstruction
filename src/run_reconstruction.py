@@ -5,7 +5,7 @@ import ast
 import json
 import mccabe
 
-root_path = Path('/home/joshua/scrapy')
+root_path = None
 
 def internal_module_path(module_name):
     inner_path = '/'.join(module_name.split('.'))
@@ -106,14 +106,26 @@ def flatten(nested_deps):
             edges = outgoing.copy()
     return nodes, edges
 
-
-def write_dependencies_file(module_name):
+def write_scrapy_reconstruction():
     global resolving
-    resolving = set()
-    nested_deps = resolve_module(module_name)
-    nodes, edges = flatten([nested_deps])
+    global root_path
+    root_path = Path('/home/joshua/scrapy')
+    nodes = {}
+    edges = {}
+    for entry_file in (root_path/'scrapy').glob('**/*.py'):
+        module_name = '.'.join(entry_file.parts[len(root_path.parts):])[0:-3]
+        if module_name in nodes:
+            continue
+        if module_name.endswith("__init__"):
+            module_name = module_name[0:-len("__init__")]
+        resolving = set()
+        nested_deps = resolve_module(module_name)
+        nnodes, nedges = flatten([nested_deps])
+        nodes.update(nnodes)
+        edges.update(nedges)
     content = json.dumps({"modules": list(nodes.values()), "requires": list(edges.values())})
-    with open('reconstruction.json', 'w') as file:
-        file.write(content)
+    with open('reconstruction-scrapy.json', 'w') as f:
+        f.write(content)
+
     
-write_dependencies_file('scrapy.crawler')
+write_scrapy_reconstruction()
