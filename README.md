@@ -8,4 +8,4 @@ A module dependencies graph was built out of the code base of the open source pr
 
 Have a look at the tool built at [here](https://mynjj.github.io/architecture-reconstruction/index.html).
 
-You can see more detail on the [report](https://github.com/mynjj/architecture-reconstruction/blob/main/report/report.pdf).
+You can see more details on the [report](https://github.com/mynjj/architecture-reconstruction/blob/main/report/report.pdf).
