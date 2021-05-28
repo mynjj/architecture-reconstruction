@@ -96,7 +96,7 @@ const CustomModules = ({graphData, selected, setSelected}) => {
 		    <div style={{display: 'flex', justifyContent: 'space-between'}}>
 			<a onClick={e=>{e.preventDefault();toggleAll();}} href="#" style={{color: 'black'}}>Toggle all</a>
 			<a onClick={e=>{e.preventDefault();addOutgoing();}} href="#" style={{color: 'black'}}>Add dependencies</a>
-			<a onClick={e=>{e.preventDefault();addIncoming();}} href="#" style={{color: 'black'}}>Add modules depending</a>
+			<a onClick={e=>{e.preventDefault();addIncoming();}} href="#" style={{color: 'black'}}>Add dependents</a>
 		    </div>
 		    <Form.Group style={{maxHeight: '200px', overflow: 'auto'}}>
 			{graphData.modules.map(m=>(
